@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title class="logo">Two Factor Authentication App</title>    
+</head>
+<body bgcolor="#373737">
+    <div id="container" style="white-space:nowrap; margin-top:100px" align="center">
+        <div id="image" style="display:inline;">
+            <img src="https://www.flowroute.com/wp-content/uploads/theme/flowroute_logo-x-ns.png"/>
+        </div>
+        <div id="texts" style="display:inline; white-space:nowrap;" align="center"> 
+            <h1><font color="#00c3d7">Two-Factor Authentication App</font></h1>
+        </div>
+        <div class="container" align="center">
+            <form action="{{ url_for('main') }}" method=post>
+                {% for message in form.toNumber.errors %}
+                    <div>
+                        <h3><font color="red">{{ message }}</font></h3>
+                    </div>
+                {% endfor %}
+                <br>
+                {% for message in form.pinField.errors %}
+                    <div>
+                        <h3><font color="red">{{ message }}</font></h3>
+                    </div>
+                {% endfor %}
+                <br>
+                {{ form.hidden_tag() }}
+                <font color="#f0f5f5">
+                {{ form.toNumber.label }}
+                </font>        
+                <br>
+                {{ form.toNumber }}
+                <br>
+                {{ form.submit }}
+                <br> <br>
+                <font color="#f0f5f5">
+                {{ form.pinField.label }}
+                </font>
+                <br>
+                {{ form.pinField }}
+                <br>
+                {{ form.checkPin }}
+            </form>
+        </div> 
+    </div>
+</body>
+</html>
