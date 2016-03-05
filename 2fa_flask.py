@@ -7,8 +7,6 @@ from FlowrouteMessagingLib.Controllers.APIController import APIController
 from FlowrouteMessagingLib.Models import Message
 
 
-global SECRET_CODE
-
 app = Flask(__name__)
 app.debug = True
 app.secret_key = 'Your_app_secret_key'
@@ -36,6 +34,7 @@ def user_verification():
     Renders the 2 factor authentication form, generates a secret code, 
     and verifies they are equal on submission.
     """
+    global SECRET_CODE
     form = UserForm()
     if request.method == 'GET':
         return render_template('index.html', form=form)
@@ -45,7 +44,10 @@ def user_verification():
         elif 'submit' in request.form:
             SECRET_CODE = str(randint(999, 9999))
             recipient = str(form.toNumber.data)
-            msg = Message(to=recipient, from_="18444205780", content=SECRET_CODE)
+            msg = Message(
+                to=recipient,
+                from_="18444205780",
+                content=SECRET_CODE)
             controller.create_message(msg)
             return render_template('index.html', form=form)
         elif str(form.pinField.data) == SECRET_CODE:
