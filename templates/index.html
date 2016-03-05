@@ -12,7 +12,7 @@
             <h1><font color="#00c3d7">Two-Factor Authentication App</font></h1>
         </div>
         <div class="container" align="center">
-            <form action="{{ url_for('main') }}" method=post>
+            <form action="{{ url_for('user_verification') }}" method=post>
                 {% for message in form.toNumber.errors %}
                     <div>
                         <h3><font color="red">{{ message }}</font></h3>
