@@ -1,0 +1,2 @@
+CODE_LENGTH = 4
+CODE_EXPIRATION = 3600  # 1 Hour expiration
