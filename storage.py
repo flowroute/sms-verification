@@ -1,75 +1,82 @@
 import sqlite3 as sqlite
-import boto3
-
-from settings import CODE_LENGTH
 
 
 class InternalStorageError(Exception):
     pass
 
 
-class CodeNotSetError(InternalStorageError):
+class CodeNotSetError(Exception):
     pass
 
 
-class UserNotFoundError(InternalStorageError):
-    pass
+class AuthStorageBackend(object):
 
-
-class TwoFactorAuthStorageBackend(object):
-
-    def set_user_code(self, user_id, code):
+    def set_auth_code(self, auth_id, code):
         raise NotImplementedError
 
-    def get_user_code(self, user_id):
+    def get_auth_code(self, auth_id):
         raise NotImplementedError
 
-    def remove_code(self, user_id):
+    def set_num_attempts(self, auth_id, attempts_made):
         raise NotImplementedError
 
-    def remove_user(self, user_id):
+    def delete_auth_code(self, auth_id):
         raise NotImplementedError
 
 
-class SQLiteStorageBackend(TwoFactorAuthStorageBackend):
+class SQLiteAuthBackend(AuthStorageBackend):
 
-    def __init__(self, database_name='authorization.db'):
+    def __init__(self, database_name):
         self.db_conn = sqlite.connect(database_name)
-        inst_table_q = ("CREATE TABLE IF NOT EXISTS user_codes"
-                        "(user_id TEXT PRIMARY KEY, code INTEGER,"
-                        "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)")
+        inst_table_q = ("CREATE TABLE IF NOT EXISTS codes"
+                        "(auth_id TEXT PRIMARY KEY, code INTEGER, "
+                        "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, "
+                        "attempts INTEGER DEFAULT 0)")
         with self.db_conn:
             self.db_conn.execute(inst_table_q)
 
-    def set_user_code(self, user_id, code):
-        assert len(str(code)) == CODE_LENGTH
-        with self.db_conn:
-            self.db_conn.execute(
-                ("INSERT OR REPLACE INTO "
-                 "user_codes(user_id, code) VALUES (?, ?)"),
-                (user_id, code))
+    def set_auth_code(self, auth_id, code):
+        try:
+            with self.db_conn:
+                self.db_conn.execute(
+                    ("INSERT OR REPLACE INTO "
+                     "codes(auth_id, code) VALUES (?, ?)"),
+                    (auth_id, code))
+        except sqlite.Error as e:
+            raise InternalStorageError(e)
 
-    def get_user_code(self, user_id):
+    def get_auth_code(self, auth_id):
         cur = self.db_conn.cursor()
-        cur.execute(
-            "SELECT code, timestamp FROM user_codes WHERE user_id = ?",
-            (user_id,))
+        try:
+            cur.execute(
+                ("SELECT code, timestamp, attempts FROM codes "
+                 "WHERE auth_id = ?"),
+                (auth_id,))
+        except sqlite.Error as e:
+            raise InternalStorageError(e)
         result = cur.fetchone()
+        cur.close()
         if result is None:
             raise CodeNotSetError(
-                "Unable to find a code set for customer {}".format(user_id))
+                "Unable to find a code set for auth_id {}".format(auth_id))
         else:
             return result
 
-    def remove_code(self, user_id):
+    def delete_auth_code(self, auth_id):
         with self.db_conn:
-            self.db_conn.execute(
-                ("UPDATE user_codes SET code = ?, timestamp = ?"
-                 "WHERE user_id = ?"),
-                (None, None, user_id))
+            try:
+                self.db_conn.execute(
+                    "DELETE FROM codes WHERE auth_id = ?",
+                    (auth_id,))
+            except sqlite.Error as e:
+                raise InternalStorageError(e)
 
-    def remove_user(self, user_id):
+    def set_num_attempts(self, auth_id, attempts_made):
         with self.db_conn:
-            self.db_conn.execute(
-                "DELETE FROM user_codes WHERE user_id = ?",
-                (user_id,))
+            try:
+                self.db_conn.execute(
+                    ("UPDATE codes SET attempts = ? "
+                     "WHERE auth_id = ?"),
+                    (attempts_made, auth_id))
+            except sqlite.Error as e:
+                raise InternalStorageError(e)
