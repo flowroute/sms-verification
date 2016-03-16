@@ -1,6 +1,7 @@
 DEBUG_MODE = True
-TEST_DB = "test_auth.db"
+SQLALCHEMY_TRACK_MODIFICATIONS = True
 
+TEST_DB = "test_auth.db"
 DB = "auth_codes.db"
 
 CODE_LENGTH = 4

@@ -1,16 +1,21 @@
 import pytest
-import os
 import json
 import urllib
 import arrow
-from ..api import generate_code, is_code_valid, app
+from ..api import generate_code, is_code_valid, app, db, AuthCode
 from ..settings import TEST_DB, RETRIES_ALLOWED
-from ..storage import SQLiteAuthBackend
-from test_storage import test_set_code
 
 
 def teardown_module(module):
-    os.remove(TEST_DB)
+    if TEST_DB in app.config['SQLALCHEMY_DATABASE_URI']:
+        db.drop_all()
+    else:
+        raise AttributeError(("The production database is turned on. "
+                              "Flip settings.DEBUG to True"))
+
+
+def setup_module(module):
+    db.create_all()
 
 
 @pytest.mark.parametrize("length, err", [
@@ -56,11 +61,12 @@ def test_is_code_valid(ts, exp_window, expected):
 
 def test_get_auth_success(app=app):
     client = app.test_client()
-    auth_uuid = test_set_code()
-    backend = SQLiteAuthBackend(database_name=TEST_DB)
-    backend.set_num_attempts(auth_uuid, RETRIES_ALLOWED - 1)
+    new_auth = AuthCode('jjj', 1234)
+    new_auth.attempts = RETRIES_ALLOWED - 1
+    db.session.add(new_auth)
+    db.session.commit()
     query = urllib.urlencode(
-        {'auth_id': auth_uuid,
+        {'auth_id': new_auth.auth_id,
          'code': 1234,
          })
     with client:
@@ -69,17 +75,18 @@ def test_get_auth_success(app=app):
     assert json.loads(res.data)['Authenticated'] is True
 
 
-@pytest.mark.parametrize("retries, retry", [
-    (RETRIES_ALLOWED - 1, False),
-    (1, True),
+@pytest.mark.parametrize("auth_id, retries, retry", [
+    ('aaa', RETRIES_ALLOWED - 1, False),
+    ('bbb', 1, True),
 ])
-def test_get_auth_attempts_fail(retries, retry, app=app):
+def test_get_auth_attempts_fail(auth_id, retries, retry, app=app):
     client = app.test_client()
-    auth_uuid = test_set_code()
-    backend = SQLiteAuthBackend(database_name=TEST_DB)
-    backend.set_num_attempts(auth_uuid, retries)
+    new_auth = AuthCode(auth_id, 1234)
+    new_auth.attempts = retries
+    db.session.add(new_auth)
+    db.session.commit()
     query = urllib.urlencode(
-        {'auth_id': auth_uuid,
+        {'auth_id': auth_id,
          'code': 1111,
          })
     with client:

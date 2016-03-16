@@ -1,8 +1,12 @@
 from random import randint
 import json
 import arrow
+from datetime import datetime
 
 from flask import Flask, request, jsonify, Response
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 
 from FlowrouteMessagingLib.Controllers.APIController import APIController
 from FlowrouteMessagingLib.Models import Message
@@ -12,7 +16,6 @@ from settings import (DEBUG_MODE, CODE_LENGTH, CODE_EXPIRATION,
 
 from credentials import (FLOWROUTE_ACCESS_KEY, FLOWROUTE_SECRET_KEY,
                          FLOWROUTE_NUMBER)
-from storage import SQLiteAuthBackend, CodeNotSetError, InternalStorageError
 
 
 app = Flask(__name__)
@@ -20,9 +23,23 @@ controller = APIController(username=FLOWROUTE_ACCESS_KEY,
                            password=FLOWROUTE_SECRET_KEY)
 if DEBUG_MODE:
     app.debug = DEBUG_MODE
-    storage = SQLiteAuthBackend(TEST_DB)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + TEST_DB
 else:
-    storage = SQLiteAuthBackend(DB)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DB
+
+db = SQLAlchemy(app)
+
+
+class AuthCode(db.Model):
+    auth_id = db.Column(db.String(120), primary_key=True)
+    code = db.Column(db.Integer)
+    timestamp = db.Column(db.DateTime)
+    attempts = db.Column(db.Integer, default=0)
+
+    def __init__(self, auth_id, code):
+        self.auth_id = auth_id
+        self.code = code
+        self.timestamp = datetime.utcnow()
 
 
 class InvalidAPIUsage(Exception):
@@ -64,10 +81,22 @@ def is_code_valid(timestamp, exp_window=CODE_EXPIRATION):
 def user_verification():
     if request.method == 'POST':
         body = request.json
-        session_id = str(body['auth_id'])
-        recipient = int(body['recipient'])
+        auth_id = str(body['auth_id'])
+        recipient = str(body['recipient'])
         auth_code = generate_code()
-        storage.set_auth_code(session_id, auth_code)
+        # Just overwrite if exists
+        auth = AuthCode(auth_id, auth_code)
+        db.session.add(auth)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            update_info = {'code': auth_code,
+                           'attempts': 0,
+                           'timestamp': datetime.utcnow()}
+            AuthCode.query.filter_by(
+                auth_id=auth_id).update(update_info)
+            db.session.commit()
         msg = Message(
             to=recipient,
             from_=FLOWROUTE_NUMBER,
@@ -84,9 +113,12 @@ def user_verification():
         except:
             raise InvalidAPIUsage()
         try:
-            stored_code, timestamp, attempts = storage.get_auth_code(auth_id)
-        except storage.CodeNotSetError:
-            # Likely the attempt threshold, or expirationm was reached
+            stored_auth = AuthCode.query.filter_by(auth_id=auth_id).one()
+            stored_code = stored_auth.code
+            timestamp = stored_auth.timestamp
+            attempts = stored_auth.attempts
+        except NoResultFound:
+            # Likely the attempt threshold, or expiration was reached
             return Response(
                 json.dumps({"Authenticated": False, "Retry": False}),
                 mimetype='application/json')
@@ -94,43 +126,33 @@ def user_verification():
         if is_valid:
             # Code has not expired
             if query_code == stored_code:
-                    storage.delete_auth_code(auth_id)
+                    db.session.delete(stored_auth)
+                    db.session.commit()
                     return Response(
                         json.dumps({"Authenticated": True, "Retry": False}),
                         mimetype='application/json')
             else:
                 if (attempts + 1) >= RETRIES_ALLOWED:
                     # That was the last try so remove the code
-                    storage.delete_auth_code(auth_id)
+                    db.session.delete(stored_auth)
+                    db.session.commit()
                     return Response(
                         json.dumps({"Authenticated": False, "Retry": False}),
                         mimetype='application/json')
                 else:
                     # Increment the attempts made
-                    storage.set_num_attempts(auth_id, attempts + 1)
+                    stored_auth.attempts = attempts + 1
+                    db.session.commit()
                     return Response(
                         json.dumps({"Authenticated": False, "Retry": True}),
                         mimetype='application/json')
         else:
             # Code has expired
-            storage.delete_auth_code(auth_id)
+            db.session.delete(stored_auth)
+            db.session.commit()
             return Response(
                 json.dumps({"Authenticated": False, "Retry": False}),
                 mimetype='application/json')
-
-
-@app.errorhandler(InternalStorageError)
-def handle_database_error(error):
-    response = jsonify({})
-    response.status_code = 500
-    return response
-
-
-@app.errorhandler(CodeNotSetError)
-def handle_not_found(error):
-    response = jsonify({})
-    response.status_code = 404
-    return response
 
 
 @app.errorhandler(InvalidAPIUsage)
@@ -140,4 +162,5 @@ def handle_invalid_usage(error):
     return response
 
 if __name__ == "__main__":
+    db.create_all()
     app.run('127.0.0.1')
