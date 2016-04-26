@@ -43,13 +43,24 @@ class AuthCode(db.Model):
 
 
 class InvalidAPIUsage(Exception):
-    status_code = 400
 
-    def __init__(self, message, status_code=None, payload=None):
+    def __init__(self, message, status_code=400, payload=None):
         Exception.__init__(self)
         self.message = message
-        if status_code is not None:
-            self.status_code = status_code
+        self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        return rv
+
+
+class InvalidAttemptError(Exception):
+    def __init__(self, message, status_code=400, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        self.status_code = status_code
         self.payload = payload
 
     def to_dict(self):
@@ -69,7 +80,7 @@ def generate_code(length=CODE_LENGTH):
 def is_code_valid(timestamp, exp_window=CODE_EXPIRATION):
     now = arrow.utcnow()
     entry_time = arrow.get(timestamp)
-    # When replace recieves pluralized kwarg it shifts (offset)
+    # When replace receives pluralized, ie. 'seconds' kwarg it shifts (offset)
     exp_time = entry_time.replace(seconds=exp_window)
     if now <= exp_time:
         return True
@@ -111,7 +122,8 @@ def user_verification():
             auth_id = str(request.args['auth_id'])
             query_code = int(request.args['code'])
         except:
-            raise InvalidAPIUsage()
+            raise InvalidAPIUsage(payload={'requires': ['auth_id (str)',
+                                                        'code (int)']})
         try:
             stored_auth = AuthCode.query.filter_by(auth_id=auth_id).one()
             stored_code = stored_auth.code
@@ -119,43 +131,47 @@ def user_verification():
             attempts = stored_auth.attempts
         except NoResultFound:
             # Likely the attempt threshold, or expiration was reached
-            return Response(
-                json.dumps({"Authenticated": False, "Retry": False}),
-                mimetype='application/json')
+            raise InvalidAttemptError(
+                "Invalid code",
+                payload={'reason': 'InvalidAuthCode',
+                         'attempts_remaining': 0})
         is_valid = is_code_valid(timestamp)
         if is_valid:
-            # Code has not expired
             if query_code == stored_code:
                     db.session.delete(stored_auth)
                     db.session.commit()
                     return Response(
-                        json.dumps({"Authenticated": True, "Retry": False}),
+                        json.dumps({"authenticated": True}),
                         mimetype='application/json')
             else:
-                if (attempts + 1) >= RETRIES_ALLOWED:
+                attempts_made = attempts + 1
+                if attempts_made >= RETRIES_ALLOWED:
                     # That was the last try so remove the code
                     db.session.delete(stored_auth)
                     db.session.commit()
-                    return Response(
-                        json.dumps({"Authenticated": False, "Retry": False}),
-                        mimetype='application/json')
+                    raise InvalidAttemptError(
+                        "Invalid code",
+                        payload={'reason': 'InvalidAuthCode',
+                                 'attempts_remaining': 0})
                 else:
                     # Increment the attempts made
-                    stored_auth.attempts = attempts + 1
+                    stored_auth.attempts = attempts_made
                     db.session.commit()
-                    return Response(
-                        json.dumps({"Authenticated": False, "Retry": True}),
-                        mimetype='application/json')
+                    raise InvalidAttemptError(
+                        "Invalid code",
+                        payload={'reason': 'InvalidAuthCode',
+                                 'attempts_remaining':
+                                 (RETRIES_ALLOWED - attempts_made)})
         else:
             # Code has expired
             db.session.delete(stored_auth)
             db.session.commit()
-            return Response(
-                json.dumps({"Authenticated": False, "Retry": False}),
-                mimetype='application/json')
+            raise InvalidAttemptError("Expired code",
+                                      payload={'reason': 'ExpiredAuthCode',
+                                               'attempts_remaining': 0})
 
 
-@app.errorhandler(InvalidAPIUsage)
+@app.errorhandler((InvalidAPIUsage, InvalidAttemptError))
 def handle_invalid_usage(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
