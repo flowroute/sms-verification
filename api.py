@@ -16,6 +16,7 @@ from settings import (DEBUG_MODE, CODE_LENGTH, CODE_EXPIRATION,
 
 from credentials import (FLOWROUTE_ACCESS_KEY, FLOWROUTE_SECRET_KEY,
                          FLOWROUTE_NUMBER)
+from log import log
 
 
 app = Flask(__name__)
@@ -74,6 +75,7 @@ def generate_code(length=CODE_LENGTH):
     min_range = (10 ** (length - 1)) - 1
     max_range = (10 ** (length)) - 1
     code = randint(min_range, max_range)
+    log.debug({"message": "generated code: {}".format(code)})
     return code
 
 
@@ -108,6 +110,7 @@ def user_verification():
             AuthCode.query.filter_by(
                 auth_id=auth_id).update(update_info)
             db.session.commit()
+        log.debug({"message": "persisted auth record"})
         msg = Message(
             to=recipient,
             from_=FLOWROUTE_NUMBER,
@@ -116,6 +119,8 @@ def user_verification():
                      "complete your sign up.").format(auth_code,
                                                       COMPANY_NAME))
         controller.create_message(msg)
+        log.info(
+            {"message": "sent SMS with auth code to {}".format(recipient)})
         return "Verification code created."
     if request.method == 'GET':
         try:
@@ -124,51 +129,62 @@ def user_verification():
         except:
             raise InvalidAPIUsage(payload={'requires': ['auth_id (str)',
                                                         'code (int)']})
+            log.debug(
+                {"message":
+                 "received an auth request for id {}".format(auth_id)})
         try:
             stored_auth = AuthCode.query.filter_by(auth_id=auth_id).one()
-            stored_code = stored_auth.code
-            timestamp = stored_auth.timestamp
-            attempts = stored_auth.attempts
         except NoResultFound:
             # Likely the attempt threshold, or expiration was reached
+            log.info({"message": "no auth id found matching the request"})
             raise InvalidAttemptError(
                 "Invalid code",
                 payload={'reason': 'InvalidAuthCode',
-                         'attempts_remaining': 0})
-        is_valid = is_code_valid(timestamp)
+                         'attempts_left': 0})
+        else:
+            stored_code = stored_auth.code
+            timestamp = stored_auth.timestamp
+            attempts = stored_auth.attempts
+            is_valid = is_code_valid(timestamp)
         if is_valid:
             if query_code == stored_code:
-                    db.session.delete(stored_auth)
-                    db.session.commit()
-                    return Response(
-                        json.dumps({"authenticated": True}),
-                        mimetype='application/json')
+                db.session.delete(stored_auth)
+                db.session.commit()
+                log.info({"message": "auth code is valid"})
+                return Response(
+                    json.dumps({"authenticated": True}),
+                    mimetype='application/json')
             else:
                 attempts_made = attempts + 1
                 if attempts_made >= RETRIES_ALLOWED:
                     # That was the last try so remove the code
                     db.session.delete(stored_auth)
                     db.session.commit()
+                    log.info({"message": "auth code is invalid",
+                              "attempts_left": 0})
                     raise InvalidAttemptError(
                         "Invalid code",
                         payload={'reason': 'InvalidAuthCode',
-                                 'attempts_remaining': 0})
+                                 'attempts_left': 0})
                 else:
+                    num_left = (RETRIES_ALLOWED - attempts_made)
                     # Increment the attempts made
                     stored_auth.attempts = attempts_made
                     db.session.commit()
+                    log.info({"message": "auth code is invalid",
+                              "attempts_left": num_left})
                     raise InvalidAttemptError(
                         "Invalid code",
                         payload={'reason': 'InvalidAuthCode',
-                                 'attempts_remaining':
-                                 (RETRIES_ALLOWED - attempts_made)})
+                                 'attempts_left': num_left})
         else:
             # Code has expired
             db.session.delete(stored_auth)
             db.session.commit()
+            log.info({"message": "auth code has expired"})
             raise InvalidAttemptError("Expired code",
                                       payload={'reason': 'ExpiredAuthCode',
-                                               'attempts_remaining': 0})
+                                               'attempts_left': 0})
 
 
 @app.errorhandler((InvalidAPIUsage, InvalidAttemptError))
