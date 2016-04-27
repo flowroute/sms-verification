@@ -5,8 +5,8 @@ import urllib
 
 import arrow
 
-from ..api import generate_code, is_code_valid, app, db, AuthCode, controller
-from ..settings import TEST_DB, RETRIES_ALLOWED
+from sms_auth_service.api import generate_code, is_code_valid, app, db, AuthCode
+from sms_auth_service.settings import TEST_DB, RETRIES_ALLOWED
 
 
 def teardown_module(module):
