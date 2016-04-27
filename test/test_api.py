@@ -1,8 +1,11 @@
 import pytest
+import uuid
 import json
 import urllib
+
 import arrow
-from ..api import generate_code, is_code_valid, app, db, AuthCode
+
+from ..api import generate_code, is_code_valid, app, db, AuthCode, controller
 from ..settings import TEST_DB, RETRIES_ALLOWED
 
 
@@ -16,6 +19,16 @@ def teardown_module(module):
 
 def setup_module(module):
     db.create_all()
+
+
+class MockController():
+        def __init__(self):
+            self.request = None
+
+        def create_message(self, msg):
+            self.request = msg
+
+mock_controller = MockController()
 
 
 @pytest.mark.parametrize("length, err", [
@@ -47,16 +60,22 @@ def test_is_code_valid(ts, exp_window, expected):
     res = is_code_valid(ts, exp_window=exp_window)
     assert res is expected
 
-#
-#def test_post_auth(app=app):
-#    client = app.test_client()
-#    auth_uuid = str(uuid.uuid1())
-#    json_body = {"auth_id": auth_uuid}
-#    length = len(json.dumps(json_body))
-#    res = client.post('/', data=json_body,
-#                      content_type='application/json',
-#                      content_length=length)
-#    assert res.status_code == 200
+
+def test_post_auth(app=app):
+    mock_controller = MockController()
+    app.sms_controller = mock_controller
+    client = app.test_client()
+    auth_uuid = str(uuid.uuid1())
+    recipient = '11111111111'
+    json_body = {"auth_id": auth_uuid,
+                 "recipient": recipient}
+    length = len(json.dumps(json_body))
+    res = client.post('/', data=json.dumps(json_body),
+                      content_type='application/json',
+                      content_length=length)
+    int(mock_controller.request.content.split('\n')[0])
+    assert mock_controller.request.to == recipient
+    assert res.status_code == 200
 
 
 def test_get_auth_success(app=app):
@@ -72,14 +91,14 @@ def test_get_auth_success(app=app):
     with client:
         res = client.get('/?' + query)
     assert res.status_code == 200
-    assert json.loads(res.data)['Authenticated'] is True
+    assert json.loads(res.data)['authenticated'] is True
 
 
-@pytest.mark.parametrize("auth_id, retries, retry", [
-    ('aaa', RETRIES_ALLOWED - 1, False),
-    ('bbb', 1, True),
+@pytest.mark.parametrize("auth_id, retries, num_left, retry, message, reason", [
+    ('aaa', RETRIES_ALLOWED - 1, 0, False, "Invalid code", "InvalidAuthCode"),
+    ('bbb', 1, 0, True, "Invalid code", "InvalidAuthCode"),
 ])
-def test_get_auth_attempts_fail(auth_id, retries, retry, app=app):
+def test_get_auth_attempts_fail(auth_id, retries, retry, num_left, message, reason, app=app):
     client = app.test_client()
     new_auth = AuthCode(auth_id, 1234)
     new_auth.attempts = retries
@@ -91,6 +110,6 @@ def test_get_auth_attempts_fail(auth_id, retries, retry, app=app):
          })
     with client:
         res = client.get('/?' + query)
-    assert res.status_code == 200
-    assert json.loads(res.data)['Authenticated'] is False
-    assert json.loads(res.data)['Retry'] is retry
+    assert res.status_code == 400
+    assert json.loads(res.data)['message'] == 'Invalid code'
+    assert json.loads(res.data)['attempts_left'] == num_left
