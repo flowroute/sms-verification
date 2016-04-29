@@ -9,3 +9,4 @@ WTForms==2.1
 pytest==2.9.0
 arrow==0.7.0
 python-json-logger==0.1.4
+requests==2.9.1

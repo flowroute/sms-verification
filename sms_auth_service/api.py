@@ -123,14 +123,20 @@ def user_verification():
         app.sms_controller.create_message(msg)
         log.info(
             {"message": "sent SMS with auth code to {}".format(recipient)})
-        return "Verification code created."
+        return Response(
+            json.dumps({"message": "Success: Verification code created.",
+                        "auth_id": auth_id}),
+            content_type='application/json')
+
     if request.method == 'GET':
         try:
             auth_id = str(request.args['auth_id'])
             query_code = int(request.args['code'])
         except:
-            raise InvalidAPIUsage(payload={'requires': ['auth_id (str)',
-                                                        'code (int)']})
+            raise InvalidAPIUsage(
+                "Input error",
+                payload={'reason':
+                         "Required arguments: 'auth_id' (str), 'code' (int)"})
             log.debug(
                 {"message":
                  "received an auth request for id {}".format(auth_id)})
@@ -142,7 +148,8 @@ def user_verification():
                       "auth_id": auth_id})
             raise InvalidAttemptError(
                 "Unknown auth id",
-                payload={'attempts_left': 0})
+                payload={'attempts_left': 0,
+                         'reason': 'UnknownAuthId'})
         else:
             stored_code = stored_auth.code
             timestamp = stored_auth.timestamp
@@ -155,9 +162,10 @@ def user_verification():
                 log.info({"message": "Success: Authorization code verified."})
                 return Response(
                     json.dumps({"authenticated": True,
+                                "auth_id": auth_id,
                                 "message":
                                 "Success: Authorization code verified."}),
-                    mimetype='application/json')
+                    content_type='application/json')
             else:
                 attempts_made = attempts + 1
                 if attempts_made >= RETRIES_ALLOWED:
