@@ -211,4 +211,4 @@ def handle_invalid_usage(error):
 
 if __name__ == "__main__":
     db.create_all()
-    app.run('127.0.0.1')
+    app.run('127.0.0.1', 8000)

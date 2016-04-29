@@ -1,0 +1,21 @@
+#!/bin/sh
+
+CMD="$@"
+
+if [ "$1" = "test" ]; then
+   shift
+   CMD="/app/ve/bin/py.test --flake8 $@"
+fi
+
+if [ "$1" = "coverage" ]; then
+   shift
+   CMD="/app/ve/bin/py.test --cov-report html --cov=$APP"
+fi
+
+if [ "$1" = "serve" ]; then
+   shift
+   #CMD="/app/ve/bin/gunicorn -w 4 sms_auth_service.api:app $@"
+   CMD="/app/ve/bin/python -m sms_auth_service.api $@"
+fi
+
+exec $CMD
