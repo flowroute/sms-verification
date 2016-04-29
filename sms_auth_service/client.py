@@ -36,5 +36,9 @@ class SMSAuthClient(object):
             content = e.response.json()
             e.message = content['message']
             e.strerror = content['reason']
+            try:
+                e.attempts_left = content['attempts_left']
+            except:
+                pass
             raise e
         return response.json()
