@@ -18,7 +18,6 @@ class SMSAuthClient(object):
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError, e:
-            import pdb; pdb.set_trace()
             content = e.response.json()
             e.message = content['message']
             e.strerror = content['reason']

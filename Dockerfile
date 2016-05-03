@@ -28,6 +28,7 @@ COPY setup.py requirements.txt version.txt /app/
 RUN apk --update add libffi libffi-dev openssl py-cryptography
 RUN apk --update add --virtual build-deps \
       build-base \
+      git \
       libev-dev \
       openssl-dev \
       python-dev \

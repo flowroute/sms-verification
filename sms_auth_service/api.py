@@ -9,14 +9,15 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
 from FlowrouteMessagingLib.Controllers.APIController import APIController
-from FlowrouteMessagingLib.Models import Message
+from FlowrouteMessagingLib.Models.Message import Message
 
-from settings import (DEBUG_MODE, CODE_LENGTH, CODE_EXPIRATION,
-                      COMPANY_NAME, TEST_DB, DB, RETRIES_ALLOWED)
+from sms_auth_service.settings import (
+    DEBUG_MODE, CODE_LENGTH, CODE_EXPIRATION,
+    COMPANY_NAME, TEST_DB, DB, RETRIES_ALLOWED)
 
 from credentials import (FLOWROUTE_ACCESS_KEY, FLOWROUTE_SECRET_KEY,
                          FLOWROUTE_NUMBER)
-from log import log
+from sms_auth_service.log import log
 
 
 app = Flask(__name__)
@@ -120,9 +121,15 @@ def user_verification():
                      "Welcome to {}! Use this one-time code to "
                      "complete your sign up.").format(auth_code,
                                                       COMPANY_NAME))
-        app.sms_controller.create_message(msg)
-        log.info(
-            {"message": "sent SMS with auth code to {}".format(recipient)})
+        try:
+            app.sms_controller.create_message(msg)
+        except Exception as e:
+            log.info("got exception e {}, code: {}, response {}".format(
+                e, e.response_code, e.response_body))
+            raise
+        else:
+            log.info(
+                {"message": "sent SMS with auth code to {}".format(recipient)})
         return Response(
             json.dumps({"message": "Success: Verification code created.",
                         "auth_id": auth_id}),
@@ -211,4 +218,4 @@ def handle_invalid_usage(error):
 
 if __name__ == "__main__":
     db.create_all()
-    app.run('127.0.0.1', 8000)
+    app.run('0.0.0.0', 8000)

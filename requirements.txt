@@ -14,3 +14,5 @@ Unirest==1.1.6
 jsonpickle==0.7.1
 poster==0.8.1
 gunicorn==19.4.5
+git+https://github.com/flowroute/flowroute-messaging-python.git#egg=flowroute-messaging-python
+-e .
