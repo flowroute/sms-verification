@@ -14,9 +14,7 @@ fi
 
 if [ "$1" = "serve" ]; then
    shift
-   #CMD="/app/ve/bin/gunicorn -w 4 sms_auth_service.api:app $@"
-   #CMD="/app/ve/bin/gunicorn -b 0.0.0.0:8000 -w 4 sms_auth_service.api:app $@"
-   CMD="/app/ve/bin/python -m sms_auth_service.api $@"
+   CMD="/app/ve/bin/gunicorn -b 0.0.0.0:8000 -w 4 sms_auth_service.api:app $@"
 fi
 
 exec $CMD

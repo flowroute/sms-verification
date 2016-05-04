@@ -21,10 +21,14 @@ from sms_auth_service.log import log
 
 
 app = Flask(__name__)
+
+# Create an instance of the Flowroute messaging controller and
+# attach it to the app.
 controller = APIController(username=FLOWROUTE_ACCESS_KEY,
                            password=FLOWROUTE_SECRET_KEY)
 app.sms_controller = controller
 
+# Use prod, or dev database depending on debug mode
 if DEBUG_MODE:
     app.debug = DEBUG_MODE
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + TEST_DB
@@ -35,6 +39,11 @@ db = SQLAlchemy(app)
 
 
 class AuthCode(db.Model):
+    """
+    auth_id (str): the identifier of the authorization code,
+        could be a session id or a customer id.
+    code (int): 
+    """
     auth_id = db.Column(db.String(120), primary_key=True)
     code = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime)

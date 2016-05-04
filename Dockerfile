@@ -1,5 +1,5 @@
 # Not Ubuntu or python.  Saves lots of image size and decreases attack surface.
-FROM flowroute/dockerpython
+FROM alpine
 
 # This is where the app is going to live.
 WORKDIR /app
@@ -16,7 +16,7 @@ RUN mkdir -p /app/$APP \
 # layers.  As long as these files don't change, the following layers with pip
 # install can be cached...
 # Note:  We're not copying in the .git files, so version.txt is what vcversioner
-# is going to want to see.  Kinda gross.
+# is going to want to see.
 COPY setup.py requirements.txt version.txt /app/
 
 # apk allows bundling a virtual package to uninstall, to cleanup the image.
@@ -25,7 +25,7 @@ COPY setup.py requirements.txt version.txt /app/
 # image, once the modules are finished installing.
 #
 # Note that the setup.py check line ensures that vcversion is happy.
-RUN apk --update add libffi libffi-dev openssl py-cryptography
+RUN apk --update add libffi libffi-dev openssl py-cryptography py-virtualenv
 RUN apk --update add --virtual build-deps \
       build-base \
       git \
@@ -34,7 +34,7 @@ RUN apk --update add --virtual build-deps \
       python-dev \
       wget \
  && virtualenv /app/ve \
- && /app/ve/bin/pip install -U pip==7.1.2 \
+ && /app/ve/bin/pip install -U pip \
  && /app/ve/bin/python /app/setup.py check \
  && /app/ve/bin/pip install -r /app/requirements.txt \
  && apk del build-deps
@@ -43,6 +43,7 @@ RUN apk --update add --virtual build-deps \
 COPY . /app
 
 # Now ready to cease being root.
-#USER flowroute
+USER auth_admin
 ENTRYPOINT ["/app/entry"]
 CMD ["serve"]
+
