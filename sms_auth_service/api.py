@@ -42,7 +42,7 @@ class AuthCode(db.Model):
     """
     auth_id (str): the identifier of the authorization code,
         could be a session id or a customer id.
-    code (int): 
+    code (int): the code to authorize against.
     """
     auth_id = db.Column(db.String(120), primary_key=True)
     code = db.Column(db.Integer)
@@ -56,7 +56,6 @@ class AuthCode(db.Model):
 
 
 class InvalidAPIUsage(Exception):
-
     def __init__(self, message, status_code=400, payload=None):
         Exception.__init__(self)
         self.message = message
@@ -83,6 +82,9 @@ class InvalidAttemptError(Exception):
 
 
 def generate_code(length=CODE_LENGTH):
+    """
+    Generates and returns an integer with specified length.
+    """
     assert length > 0
     min_range = (10 ** (length - 1)) - 1
     max_range = (10 ** (length)) - 1
@@ -92,6 +94,10 @@ def generate_code(length=CODE_LENGTH):
 
 
 def is_code_valid(timestamp, exp_window=CODE_EXPIRATION):
+    """
+    Validates that the code has not expired yet.
+    Returns bool
+    """
     now = arrow.utcnow()
     entry_time = arrow.get(timestamp)
     # When replace receives pluralized, ie. 'seconds' kwarg it shifts (offset)
