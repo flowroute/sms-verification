@@ -21,6 +21,7 @@ from sms_auth_service.log import log
 
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 sms_controller = APIController(username=FLOWROUTE_ACCESS_KEY,
