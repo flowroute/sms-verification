@@ -1,7 +1,7 @@
 import os
 
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 LOG_LEVEL = int(os.environ.get('LOG_LEVEL', 20))
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 

@@ -21,21 +21,13 @@ from sms_auth_service.log import log
 
 
 app = Flask(__name__)
-
-# Create an instance of the Flowroute messaging controller and
-# attach it to the app.
-controller = APIController(username=FLOWROUTE_ACCESS_KEY,
-                           password=FLOWROUTE_SECRET_KEY)
-app.sms_controller = controller
-
-# Use prod, or dev database depending on debug mode
-if DEBUG_MODE:
-    app.debug = DEBUG_MODE
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + TEST_DB
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DB
-
 db = SQLAlchemy(app)
+
+sms_controller = APIController(username=FLOWROUTE_ACCESS_KEY,
+                               password=FLOWROUTE_SECRET_KEY)
+
+# Attach the Flowroute messaging controller to the app
+app.sms_controller = sms_controller
 
 
 class AuthCode(db.Model):
@@ -53,6 +45,16 @@ class AuthCode(db.Model):
         self.auth_id = auth_id
         self.code = code
         self.timestamp = datetime.utcnow()
+
+
+# Use prod, or dev database depending on debug mode
+if DEBUG_MODE:
+    app.debug = DEBUG_MODE
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + TEST_DB
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + DB
+db.create_all()
+db.session.commit()
 
 
 class InvalidAPIUsage(Exception):
@@ -139,8 +141,11 @@ def user_verification():
         try:
             app.sms_controller.create_message(msg)
         except Exception as e:
-            log.info("got exception e {}, code: {}, response {}".format(
-                e, e.response_code, e.response_body))
+            try:
+                log.info("got exception e {}, code: {}, response {}".format(
+                    e, e.response_code, e.response_body))
+            except:
+                pass
             raise
         else:
             log.info(

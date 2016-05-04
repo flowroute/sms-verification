@@ -6,7 +6,9 @@ The service uses a SQLite backend.
 A credential.py file is required at the application level with the following values (accessable via Flowroute Manager)
 
 FLOWROUTE_ACCESS_KEY = 'your_tech_prefix'
+
 FLOWROUTE_SECRET_KEY = 'your_api_secret_key'
+
 FLOWROUTE_NUMBER = 'your_flowroute_number'
 
 ## Installation and Serving the App

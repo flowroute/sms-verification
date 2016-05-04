@@ -25,14 +25,20 @@ COPY setup.py requirements.txt version.txt /app/
 # image, once the modules are finished installing.
 #
 # Note that the setup.py check line ensures that vcversion is happy.
-RUN apk --update add libffi libffi-dev openssl py-cryptography py-virtualenv
+RUN apk --update add \
+    libffi \
+    libffi-dev \
+    openssl \
+    py-cryptography \
+    py-virtualenv \
+    ca-certificates
 RUN apk --update add --virtual build-deps \
-      build-base \
-      git \
-      libev-dev \
-      openssl-dev \
-      python-dev \
-      wget \
+    build-base \
+    git \
+    libev-dev \
+    openssl-dev \
+    python-dev \
+    wget \
  && virtualenv /app/ve \
  && /app/ve/bin/pip install -U pip \
  && /app/ve/bin/python /app/setup.py check \
@@ -41,10 +47,6 @@ RUN apk --update add --virtual build-deps \
 
 # Finally copy the app, at the very end so we can cycle very quickly.
 COPY . /app
-
-# Now ready to cease being root.
-RUN adduser -S auth_admin
-USER auth_admin
 ENTRYPOINT ["/app/entry"]
 CMD ["serve"]
 
