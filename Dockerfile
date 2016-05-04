@@ -43,6 +43,7 @@ RUN apk --update add --virtual build-deps \
 COPY . /app
 
 # Now ready to cease being root.
+RUN adduser -S auth_admin
 USER auth_admin
 ENTRYPOINT ["/app/entry"]
 CMD ["serve"]
