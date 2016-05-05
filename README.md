@@ -34,3 +34,10 @@ url -X GET "http://localhost:8000?auth_id=my_session_id&code=2766"
 The service will respond with a 400 status code for invalid attempts, aif the code has expired, or if the auth_id is not recognized. The number of attempts remaining is stored in the response data, along with the reason for failure, and exception type.
 
 If the code is valid the service will respond with a 200 status code, and success message.
+
+## Contributing
+1. Fork it!
+2. Create your feature branch: `git checkout -b my-new-feature`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin my-new-feature`
+5. Submit a pull request :D
