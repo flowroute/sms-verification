@@ -13,7 +13,7 @@ from FlowrouteMessagingLib.Models.Message import Message
 
 from sms_auth_service.settings import (
     DEBUG_MODE, CODE_LENGTH, CODE_EXPIRATION,
-    COMPANY_NAME, TEST_DB, DB, RETRIES_ALLOWED)
+    COMPANY_NAME, TEST_DB, DB, RETRIES_ALLOWED, AUTH_MESSAGE)
 
 from credentials import (FLOWROUTE_ACCESS_KEY, FLOWROUTE_SECRET_KEY,
                          FLOWROUTE_NUMBER)
@@ -115,8 +115,17 @@ def is_code_valid(timestamp, exp_window=CODE_EXPIRATION):
 def user_verification():
     if request.method == 'POST':
         body = request.json
-        auth_id = str(body['auth_id'])
-        recipient = str(body['recipient'])
+        try:
+            auth_id = str(body['auth_id'])
+            int(body['recipient'])
+            recipient = str(body['recipient'])
+            assert len(recipient) == 11
+        except (AssertionError, ValueError):
+            raise InvalidAPIUsage(
+                "Required arguments: 'auth_id' (str), 'recipient' (int, length=11)",
+                payload={'reason':
+                         'InvalidAPIUsage'})
+        # Flowoute's API expects the value to be a string
         auth_code = generate_code()
         # Just overwrite if exists
         auth = AuthCode(auth_id, auth_code)
@@ -135,10 +144,7 @@ def user_verification():
         msg = Message(
             to=recipient,
             from_=FLOWROUTE_NUMBER,
-            content=("{}\n"
-                     "Welcome to {}! Use this one-time code to "
-                     "complete your sign up.").format(auth_code,
-                                                      COMPANY_NAME))
+            content=AUTH_MESSAGE.format(auth_code))
         try:
             app.sms_controller.create_message(msg)
         except Exception as e:
@@ -162,9 +168,9 @@ def user_verification():
             query_code = int(request.args['code'])
         except:
             raise InvalidAPIUsage(
-                "Input error",
+                "Required arguments: 'auth_id' (str), 'code' (int)",
                 payload={'reason':
-                         "Required arguments: 'auth_id' (str), 'code' (int)"})
+                         'InvalidAPIUsage'})
             log.debug(
                 {"message":
                  "received an auth request for id {}".format(auth_id)})
