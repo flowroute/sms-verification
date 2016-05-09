@@ -219,7 +219,7 @@ def user_verification():
                         "Invalid code",
                         payload={"message": "Invalid code",
                                  "reason": 'InvalidAuthCode',
-                                 "attempts_left": 0})
+                                 "attempts_left": num_left})
         else:
             # Code has expired
             db.session.delete(stored_auth)
