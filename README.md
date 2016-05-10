@@ -34,13 +34,23 @@ Deploying the service can be done either by running the setup using Docker or by
 
 1.	Run the folowing to build the service at the top level of the project:
 
-		$ docker build -t sms_auth_api .
+		$ docker build -t sms_auth_api:0.0.1 .
 
-2. Next, run the followig:
+-t tags the image allowing you to reference it.
 
-		$ docker run -p 8000:8000 sms_auth_api
+2. Next, run the following:
+
+		$ docker run -p 8000:8000 sms_auth_api:0.0.1
+	
+	-p binds the container port to the host port. You cannot have multiple applications listening on the same port.
+	
+###	Test the application 
 	
 	This starts four gunicorn workers listening on the port 8080 of the Docker system. This information is defined in the `entry` script.
+
+the entry script takes the last command that was passed from the `run` command. Unit testing. Won't run if debug is false.
+
+	$ docker run -p 8000:8000 sms_auth_api:0.0.1 test
 
 
 #####To run the application using Flask:
