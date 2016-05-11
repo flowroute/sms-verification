@@ -8,11 +8,11 @@ SMS_AUTH_ENDPOINT = 'http://localhost:5000'
 
 class SMSAuthClient(object):
     """
-    A client for the SMS auth service that returns response json, or
+    A client for the SMS auth service that returns a JSON response, or
     raises exceptions containing helpful information (message, reason,
     attempts_left).
 
-    Takes an http endpoint as it's only argument.
+    Takes an HTTP endpoint as its only argument.
     """
 
     def __init__(self, endpoint=SMS_AUTH_ENDPOINT):
@@ -20,9 +20,9 @@ class SMSAuthClient(object):
 
     def create_auth(self, auth_id, recipient):
         """
-        Posts the provided auth_id, and recipient to the SMS auth service.
-        Returns the response json, or raises a requests.exception.HTTPError
-        with helpful values if a non 200 response code is received.
+        Posts the provided auth_id and recipient to the SMS auth service.
+        Returns the JSON response, or raises a requests.exception.HTTPError
+        with helpful values if a non-200 response code is received.
         """
         payload = {'auth_id': auth_id,
                    'recipient': recipient}
@@ -40,7 +40,7 @@ class SMSAuthClient(object):
     def authenticate_code(self, auth_id, code):
         """
         Requests authorization from the SMS auth service given the auth_id,
-        and code (user input). Returns the response json, or raises a
+        and code (user input). Returns the response JSON, or raises a
         requests.exception.HTTPError with helpful values if a non 200
         response code is received.
         """
