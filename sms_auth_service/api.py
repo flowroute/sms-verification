@@ -13,7 +13,7 @@ from FlowrouteMessagingLib.Models.Message import Message
 
 from sms_auth_service.settings import (
     DEBUG_MODE, CODE_LENGTH, CODE_EXPIRATION,
-    COMPANY_NAME, TEST_DB, DB, RETRIES_ALLOWED, AUTH_MESSAGE)
+    TEST_DB, DB, RETRIES_ALLOWED, AUTH_MESSAGE)
 
 from credentials import (FLOWROUTE_ACCESS_KEY, FLOWROUTE_SECRET_KEY,
                          FLOWROUTE_NUMBER)
