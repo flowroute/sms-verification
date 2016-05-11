@@ -14,7 +14,7 @@ CODE_EXPIRATION = 3600  # 1 Hour expiration
 RETRIES_ALLOWED = 3
 
 
-COMPANY_NAME = 'Flowroute'
+ORG_NAME = "Your Organization Name"
 AUTH_MESSAGE = ("{{}}\n"  # Placeholder for authorization code.
                 "Welcome to {}! Use this one-time code to "
-                "complete your signup.").format(COMPANY_NAME)
+                "complete your signup.").format(ORG_NAME)
