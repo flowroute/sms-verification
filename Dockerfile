@@ -17,7 +17,7 @@ RUN mkdir -p /app/$APP \
 # install can be cached...
 # Note:  We're not copying in the .git files, so version.txt is what vcversioner
 # is going to want to see.
-COPY setup.py requirements.txt version.txt /app/
+COPY setup.py requirements.txt /app/
 
 # apk allows bundling a virtual package to uninstall, to cleanup the image.
 # Here, we're installing what we need to build python modules (including C

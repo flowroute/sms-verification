@@ -1,36 +1,189 @@
-# SMS authorization micro-service
+# SMS Identity Authorization
 
-## General Information
-The project contains a Flask app serving up a single resource at the site base.
-The service uses a SQLite backend.
-A credential.py file is required at the application level with the following values (accessable via Flowroute Manager)
+SMS Identity Authorization is a microservice that allows you to create an authorization code, expiration date, and set a number of retries, and then send that code by SMS to a specified recipient. The service exposes an API endpoint which accepts incoming verification requests; for example, this authorization code might be entered by the recipient on a web page which calls this resource.
 
-FLOWROUTE_ACCESS_KEY = 'your_tech_prefix'
+## About SMS Identity Authorization
 
-FLOWROUTE_SECRET_KEY = 'your_api_secret_key'
+The microservice uses a SQLite backend and two methods: **POST** and **GET**.
+ 
+* **POST** generates the authorization code, which includes a customizable expiration date, code length, and number of retries, before dispatching an SMS to the specified recipient.
 
-FLOWROUTE_NUMBER = 'your_flowroute_number'
+* **GET** validates the request data; after running verification on the code verification attempt, either returns a response success or an error message.
 
-## Installation and Serving the App
--There is a code generation function whose length is configurable from settings.py
--The number of authorization tries allowed, and the code expiration is also 
-    configurable from settings.py
--The company name that appears in the SMS content can be set via settings.py
+In addition, the microservice can be run in debug mode in a test environment until you're ready to deploy to production. This helps to more easily identify any errors before using the production database and ensures that all dependencies were installed correctly. 
 
-During development DEBUG_MODE should be left True to maintain the production db
+###Before you install SMS Identity Authorization
 
-To run using docker, the service can be built with 'docker build -t sms_auth_api .' at the top level of the project, then 'docker run -p 8000:8000 sms_auth_api' (starts 4 gunicorn workers listening on the docker-machine port 8000) - defined in the 'entry' script.
+**credential.py** is required at the application level. It should include your Access Key, Secret Key, and your SMS-enabled Flowroute number. 
+
+The following lines must be added to **credential.py**:
+
+	FLOWROUTE_ACCESS_KEY = "Your Access Key"
+	FLOWROUTE_SECRET_KEY = "Your Secret Key"
+	FLOWROUTE_NUMBER = "Your Flowroute phone number, using an E.164 1NPANXXXXXXXXX format"
+
+If you do not know your Flowroute information: 
+
+* Your Access Key and Secret Key can be found on the [API  Control](https://manage.flowroute.com/accounts/preferences/api/) page on the Flowroute portal. 
+* Your Flowroute phone numbers can be found on the [DIDs](https://manage.flowroute.com/accounts/dids/) page on the Flowroute portal.
+
+## Installing SMS Identity Authorization
+
+The application contains variables for creating an authorization code, expiration time, and retry attempts, and company name. In addition, you can optionally change the message that appears on the recipient's phone.
+
+Deploying the service can be done either by building and running a Docker container as specified by the provided **Dockerfile**, or by running the application locally with Flask's built-in web server.
+
+>**Note:** During development DEBUG\_MODE should be set to `True` to use the auto-generated test database. Testing can be performed on this database, which drops data in the tables each time the test module is run. Once the development cycle is over, set DEBUG\_MODE to `False` in order to use the production database. Tests cannot be run when the production database is active.  
 
 
-To run locally with Flask's built in development web server, simply use 'python -m sms_auth_service.api'. First install the service dependencies with 'pip install .' at the root level of the project.
+#####To run the application using Docker:	
 
-## Using the Service
-The service can create/send a new code by either using the client class stored in 'client.py' or using a curl command like:
-curl -v -X POST -d '{"auth_id": "my_session_id", "recipient": "phone_number"}' -H "Content-Type: application/json" localhost:8000
+1.	Run the following at the project's top level to build the service:
 
-To validate the code:
-url -X GET "http://localhost:8000?auth_id=my_session_id&code=2766"
+		$ docker build -t sms_auth_api:0.0.1 .
 
-The service will respond with a 400 status code for invalid attempts, aif the code has expired, or if the auth_id is not recognized. The number of attempts remaining is stored in the response data, along with the reason for failure, and exception type.
+	`-t` tags the image, allowing you to reference it by name instead of by image ID.
 
-If the code is valid the service will respond with a 200 status code, and success message.
+2. Next, run the following:
+
+		$ docker run -p 8000:8000 sms_auth_api:0.0.1
+	
+	`-p` binds the container port to the Docker host port. When using a virtualization layer, such as Docker-machine, the API should now be exposed on that host — for example, `http://192.168.99.100:8000`.
+	
+	By default, the `run` command spawns four Gunicorn workers listening on port `8000`. To modify the `run` command, edit the settings in the Docker **entry** file located in the project root.
+	
+#####To run the application using Flask:
+
+1.	Run the following to install the service dependencies at the root level of the project:
+
+		pip install .
+
+2. Next, run the following:
+		
+		python -m sms_auth_service.api
+	
+	The service is set up at the root level.
+	
+>**Note:** See the [Flask](a href="http://flask.pocoo.org/") documentation for more information about the web framework.
+
+##Configure application settings
+Authorization settings can be configured using one of two methods: update the **settings.py** file or use **client.py**.
+
+###settings.py
+**settings.py** allows you to customize the authorization parameters, including authorization code length, expiration, number of retries, company name, and message. 
+
+#####To configure the authorization settings:
+
+1. Open **settings.py**.
+
+2. Modify any of the following values as needed: 
+		
+		CODE_LENGTH = 4
+		CODE_EXPIRATION = 3600  # 1 Hour expiration
+		RETRIES_ALLOWED = 3
+		ORG_NAME="Your Organization Name"
+		AUTH_MESSAGE=("{{}}\n"  # Placeholder for authorization code.
+                "Welcome to {}! Use this one-time code to "
+                "complete your signup.").format(COMPANY_NAME)
+
+	######settings.py parameters
+
+	| Variable |  Data type   |Constraint                                                                                	|
+	|-----------|----------|----------|------------------------------|
+	|`CODE_LENGTH`| INT	   | Sets the length of the authorization code. There is neither no minimum nor maximum number of digits. The default length is `4` (four) digits long.| 
+	|`CODE_EXPIRATION`| INT| The length of time, in seconds and including retries, before the authorization code expires. There is no limit on the time. The default value is `3600` seconds (one hour).
+	|`RETRIES_ALLOWED`|INT|	The number of retries allowed before the code is invalid. There is no limit on the number of retries you can set. The default retry number is `3`. |
+	|`ORG_NAME`|String|The name you want displayed in the authorization message within the enclosing quotes (`""`). There is no limit on the number of alphanumeric characters. The default name is `Your Organization Name`.|
+	|`AUTH_MESSAGE`|String|The message sent with the code. There is no limit on the number of alphanumeric characters that can be used, but if it exceeds 160 characters, the message will be broken up into multiple messages. See [Message Length & Encoding](https://developer.flowroute.com/docs/message-length-concatenation) for more information on message length.|
+
+3. Save the file.
+
+###client.py
+The SMSAuthClient can be imported from **client.py** and instantiated with the `SMS_AUTH_ENDPOINT` as it's only argument. The SMSAuthClient has two methods, `create_auth` and `authenticate_code`, which proxy to the service resource endpoints.  
+
+**client.py** reads the response and returns a success or error message as needed. 
+
+The module is located within the sms\_auth\_service Python package.
+
+##	Test the application 
+	
+In a test environment, invoke the `docker run` command with the `test` argumentrun tests and to see results. To change the `docker run` command options, modify the `test`, `coverage`, or `serve` options in the `entry` script located in the top level **mfa-app** directory. 
+
+>**Note:** To learn more about Docker entry points, see [Dockerfile Best Practices](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/).
+
+*	Run the following: 
+
+		$ docker run -p 8000:8000 sms_auth_api:0.0.1 test
+
+	A `py.test` command is invoked from within the container. When running `coverage`, a cov-report directory is created that contains an **index.html** file detailing test coverage results. 
+
+## Use the application
+
+Once the application is up-and-running, the authorization resources can now be invoked with their respective request types.
+
+###Send the code (POST)
+
+Generate and send the code. You can:
+
+* use a curl **POST** command:
+
+		curl -v -X POST -d '{"auth_id": "my_identifier", "recipient": "my_phone_number"}' -H 
+		 "Content-Type: application/json" localhost:8000
+
+	| Parameter: Argument | Required | Constraint |                                                                             
+|-----------|----------|---------------------------------------------------------------|
+|`auth_id: Identifier`|Yes|The `my_identifier` is any user-defined string, limited to 120 characters. For example, this could be a UUID.
+|`recipient: my_phone number`|Yes|`my_phone_number` is the phone number identifying the recipient using an 11-digit, E.164 formatted *1NPANXXXXXXXXX* number. Validation is performed to ensure the phone number meets the formatting requirement, but no validation is performed to determine whether or not the phone number itself is valid. |
+
+	>**Important:** When using **POST** method with JSON you must also include the complete `Content-Type:application/json" localhost:8000` header. 
+
+* use the client class stored in **client.py** 
+
+		from client import SMSAuthClient 
+		my_client = SMSAuthClient(endpoint="localhost:8000")
+		my_client.create_auth("my_identifier", "my_phone_number")
+		
+	
+###Validate the code (GET)
+
+* Run the following:
+
+		url -X GET "http://localhost:8000?auth_id=my_identifier&code=1234'"
+		
+	In this example, 
+	*	`my_identifier` is the `auth_id` from the **POST** request.
+	* 	`1234` is the value passed through from user input.		
+		
+>**Important!** URL encoding is required for the **GET** request.
+		
+The following then occurs:
+
+1.	The `auth_id` is validated. If the authorization ID is not recognized, a **400** status code is returned.
+
+2. 	The code is checked against the expiration time. If the code has expired, the entry is deleted, and no attempts for that `auth_id` will be recognized. A **400** status code is returned. 
+
+3. 	If the code has not expired, but the attempt does not match the stored code, retries based on the number set in **settings.py** begin. 
+
+	* If the code matches the stored code, a **200** success message is returned, and the entry is removed from the database.
+	* If the number of retries is reached without success, no more retries are allowed, and the entry is removed from the database.
+	
+	>**Note:** Because they are no longer needed, validated and failed authorization entries are removed  in order to keep database size down. 
+
+####Success response
+
+A valid authorization code returns a response with a **200** status code and a success message.
+
+####Error response
+
+The following describe the possible error status codes:
+ 
+*	a **400** status code for invalid attempts, if the code has expired, or if the `auth_id` is not recognized. The number of retry attempts remaining is stored in the response data, along with the reason for the failure and the exception type.
+*  a **500** status code for an internal error, or if a phone number is not reachable on the network.
+
+
+## Contributing
+1. Fork it!
+2. Create your feature branch: `git checkout -b my-new-feature`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin my-new-feature`
+5. Submit a pull request :D 

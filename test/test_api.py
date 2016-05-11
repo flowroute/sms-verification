@@ -18,6 +18,11 @@ def teardown_module(module):
 
 
 def setup_module(module):
+    if TEST_DB in app.config['SQLALCHEMY_DATABASE_URI']:
+        db.drop_all()
+    else:
+        raise AttributeError(("The production database is turned on. "
+                              "Flip settings.DEBUG to True"))
     db.create_all()
 
 
@@ -94,14 +99,14 @@ def test_get_auth_success(app=app):
     assert json.loads(res.data)['authenticated'] is True
 
 
-@pytest.mark.parametrize("auth_id, retries, num_left, retry, message, reason", [
+@pytest.mark.parametrize("auth_id, attempts, retries, retry, message, reason", [
     ('aaa', RETRIES_ALLOWED - 1, 0, False, "Invalid code", "InvalidAuthCode"),
-    ('bbb', 1, 0, True, "Invalid code", "InvalidAuthCode"),
+    ('bbb', 1, 1, True, "Invalid code", "InvalidAuthCode"),
 ])
-def test_get_auth_attempts_fail(auth_id, retries, retry, num_left, message, reason, app=app):
+def test_get_auth_attempts_fail(auth_id, attempts, retries, retry, message, reason, app=app):
     client = app.test_client()
     new_auth = AuthCode(auth_id, 1234)
-    new_auth.attempts = retries
+    new_auth.attempts = attempts
     db.session.add(new_auth)
     db.session.commit()
     query = urllib.urlencode(
@@ -112,4 +117,4 @@ def test_get_auth_attempts_fail(auth_id, retries, retry, num_left, message, reas
         res = client.get('/?' + query)
     assert res.status_code == 400
     assert json.loads(res.data)['message'] == 'Invalid code'
-    assert json.loads(res.data)['attempts_left'] == num_left
+    assert json.loads(res.data)['attempts_left'] == retries
