@@ -24,8 +24,8 @@ The following lines must be added to **credential.py**:
 
 If you do not know your Flowroute information: 
 
-* Your Access Key and Secret Key can be found on the [API  Control](https://manage.flowroute.com/accounts/preferences/api/) page on the Flowroute portal. 
-* Your Flowroute phone numbers can be found on the [DIDs](https://manage.flowroute.com/accounts/dids/) page on the Flowroute portal.
+* Your Access Key and Secret Key can be found on the <a href="https://manage.flowroute.com/accounts/preferences/api/" target="_blank"> API Control </a>  page on the Flowroute portal. 
+* Your Flowroute phone numbers can be found on the <a href="https://manage.flowroute.com/accounts/dids/" target="_blank"> DIDS</a> page on the Flowroute portal.
 
 ## Installing SMS Identity Authorization
 
@@ -36,7 +36,7 @@ Deploying the service can be done either by building and running a Docker contai
 >**Note:** During development DEBUG\_MODE should be set to `True` to use the auto-generated test database. Testing can be performed on this database, which drops data in the tables each time the test module is run. Once the development cycle is over, set DEBUG\_MODE to `False` in order to use the production database. Tests cannot be run when the production database is active.  
 
 
-#####To run the application using Docker:	
+##### To run the application using Docker:	
 
 1.	Run the following at the project's top level to build the service:
 
@@ -52,7 +52,7 @@ Deploying the service can be done either by building and running a Docker contai
 	
 	By default, the `run` command spawns four Gunicorn workers listening on port `8000`. To modify the `run` command, edit the settings in the Docker **entry** file located in the project root.
 	
-#####To run the application using Flask:
+##### To run the application using Flask:
 
 1.	Run the following to install the service dependencies at the root level of the project:
 
@@ -66,13 +66,13 @@ Deploying the service can be done either by building and running a Docker contai
 	
 >**Note:** See the [Flask](a href="http://flask.pocoo.org/") documentation for more information about the web framework.
 
-##Configure application settings
+## Configure application settings
 Authorization settings can be configured using one of two methods: update the **settings.py** file or use **client.py**.
 
-###settings.py
+### settings.py
 **settings.py** allows you to customize the authorization parameters, including authorization code length, expiration, number of retries, company name, and message. 
 
-#####To configure the authorization settings:
+##### To configure the authorization settings:
 
 1. Open **settings.py**.
 
@@ -86,7 +86,7 @@ Authorization settings can be configured using one of two methods: update the **
                 "Welcome to {}! Use this one-time code to "
                 "complete your signup.").format(COMPANY_NAME)
 
-	######settings.py parameters
+	###### settings.py parameters
 
 	| Variable |  Data type   |Constraint                                                                                	|
 	|-----------|----------|----------|------------------------------|
@@ -98,7 +98,7 @@ Authorization settings can be configured using one of two methods: update the **
 
 3. Save the file.
 
-###client.py
+### client.py
 The SMSAuthClient can be imported from **client.py** and instantiated with the `SMS_AUTH_ENDPOINT` as it's only argument. The SMSAuthClient has two methods, `create_auth` and `authenticate_code`, which proxy to the service resource endpoints.  
 
 **client.py** reads the response and returns a success or error message as needed. 
@@ -121,7 +121,7 @@ In a test environment, invoke the `docker run` command with the `test` argumentr
 
 Once the application is up-and-running, the authorization resources can now be invoked with their respective request types.
 
-###Send the code (POST)
+### Send the code (POST)
 
 Generate and send the code. You can:
 
@@ -144,7 +144,7 @@ Generate and send the code. You can:
 		my_client.create_auth("my_identifier", "my_phone_number")
 		
 	
-###Validate the code (GET)
+### Validate the code (GET)
 
 * Run the following:
 
@@ -163,21 +163,20 @@ The following then occurs:
 2. 	The code is checked against the expiration time. If the code has expired, the entry is deleted, and no attempts for that `auth_id` will be recognized. A **400** status code is returned. 
 
 3. 	If the code has not expired, but the attempt does not match the stored code, retries based on the number set in **settings.py** begin. 
-
 	* If the code matches the stored code, a **200** success message is returned, and the entry is removed from the database.
 	* If the number of retries is reached without success, no more retries are allowed, and the entry is removed from the database.
 	
 	>**Note:** Because they are no longer needed, validated and failed authorization entries are removed  in order to keep database size down. 
 
-####Success response
+#### Success response
 
 A valid authorization code returns a response with a **200** status code and a success message.
 
-####Error response
+#### Error response
 
 The following describe the possible error status codes:
  
-*	a **400** status code for invalid attempts, if the code has expired, or if the `auth_id` is not recognized. The number of retry attempts remaining is stored in the response data, along with the reason for the failure and the exception type.
+*  a **400** status code for invalid attempts, if the code has expired, or if the `auth_id` is not recognized. The number of retry attempts remaining is stored in the response data, along with the reason for the failure and the exception type.
 *  a **500** status code for an internal error, or if a phone number is not reachable on the network.
 
 
