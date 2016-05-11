@@ -14,8 +14,7 @@ In addition, the microservice can be run in debug mode in a test environment unt
 
 ###Before you install SMS Identity Authorization
 
-**credential.py** is required at the application level. It should include your Access Key, Secret Key, and your SMS-enabled Flowroute number. 
-
+**credential.py** is required at the application level. It should include your Access Key, Secret Key, and your SMS-enabled Flowroute number. By default the credentials.py file is listed in the **.gitignore** to protect against commiting this private information to a remote repository.
 The following lines must be added to **credential.py**:
 
 	FLOWROUTE_ACCESS_KEY = "Your Access Key"
@@ -84,7 +83,7 @@ Authorization settings can be configured using one of two methods: update the **
 		ORG_NAME="Your Organization Name"
 		AUTH_MESSAGE=("{{}}\n"  # Placeholder for authorization code.
                 "Welcome to {}! Use this one-time code to "
-                "complete your signup.").format(COMPANY_NAME)
+                "complete your signup.").format(ORG_NAME)
 
 	######settings.py parameters
 
