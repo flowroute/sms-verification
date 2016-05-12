@@ -93,7 +93,7 @@ Authorization settings can be configured using one of two methods: update the **
 	|`CODE_EXPIRATION`| INT| The length of time, in seconds and including retries, before the authorization code expires. There is no limit on the time. The default value is `3600` seconds (one hour).
 	|`RETRIES_ALLOWED`|INT|	The number of retries allowed before the code is invalid. There is no limit on the number of retries you can set. The default retry number is `3`. |
 	|`ORG_NAME`|String|The name you want displayed in the authorization message within the enclosing quotes (`""`). There is no limit on the number of alphanumeric characters. The default name is `Your Organization Name`.|
-	|`AUTH_MESSAGE`|String|The message sent with the code. There is no limit on the number of alphanumeric characters that can be used, but if it exceeds 160 characters, the message will be broken up into multiple messages. See [Message Length & Encoding](https://developer.flowroute.com/docs/message-length-concatenation) for more information on message length.|
+	|`AUTH_MESSAGE`|String|The message sent with the code. There is no limit on the number of alphanumeric characters that can be used, but if it exceeds 160 characters, the message will be broken up into multiple messages. See [Message Length & Concatenation](https://developer.flowroute.com/docs/message-length-concatenation) for more information on message length.|
 
 3. Save the file.
 
