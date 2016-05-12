@@ -63,10 +63,10 @@ Deploying the service can be done either by building and running a Docker contai
 
 	The service is set up at the root level.
 
->**Note:** See the [Flask](a href="http://flask.pocoo.org/") documentation for more information about the web framework.
+>**Note:** See the <a href="http://flask.pocoo.org/" target="_blank">Flask</a> documentation for more information about the web framework.
 
 ## Configure application settings
-Authorization settings can be configured using one of two methods: update the **settings.py** file or use **client.py**.
+Authorization settings can be configured using one of two methods: customize and run **settings.py** or run **client.py**.
 
 ### settings.py
 **settings.py** allows you to customize the authorization parameters, including authorization code length, expiration, number of retries, organization name, and message. 
@@ -90,10 +90,10 @@ Authorization settings can be configured using one of two methods: update the **
 	| Variable |  Data type   |Constraint                                                                                	|
 	|-----------|----------|----------|------------------------------|
 	|`CODE_LENGTH`| INT	   | Sets the length of the authorization code. There is neither no minimum nor maximum number of digits. The default length is `4` (four) digits long.| 
-	|`CODE_EXPIRATION`| INT| The length of time, in seconds and including retries, before the authorization code expires. There is no limit on the time. The default value is `3600` seconds (one hour).
-	|`RETRIES_ALLOWED`|INT|	The number of retries allowed before the code is invalid. There is no limit on the number of retries you can set. The default retry number is `3`. |
-	|`ORG_NAME`|String|The name you want displayed in the authorization message within the enclosing quotes (`""`). There is no limit on the number of alphanumeric characters. The default name is `Your Organization Name`.|
-	|`AUTH_MESSAGE`|String|The message sent with the code. There is no limit on the number of alphanumeric characters that can be used, but if it exceeds 160 characters, the message will be broken up into multiple messages. See [Message Length & Encoding](https://developer.flowroute.com/docs/message-length-concatenation) for more information on message length.|
+	|`CODE_EXPIRATION`| INT| Sets the length of time, in seconds and including retries, before the authorization code expires. There is no limit on the time. The default value is `3600` seconds (one hour).
+	|`RETRIES_ALLOWED`|INT|	Sets the number of retries allowed before the code is invalid. There is no limit on the number of retries you can set. The default retry number is `3`. |
+	|`ORG_NAME`|String|Displays the organization name or any other name in the authorization message. There is no limit on the number of alphanumeric characters. The default name is `Your Organization Name`.|
+	|`AUTH_MESSAGE`|String|Displays the message sent with the code on the recipient's phone. There is no limit on the number of alphanumeric characters that can be used, but if it exceeds 160 characters, the message will be broken up into multiple messages. See [Message Length & Encoding]<a href="https://developer.flowroute.com/docs/message-length-concatenation" target="_blank"> Message Length & Encoding</a> for more information on message length.|
 
 3. Save the file.
 
@@ -108,7 +108,7 @@ The module is located within the sms\_auth\_service Python package.
 
 In a test environment, invoke the `docker run` command with the `test` argument to run tests and to see results. To change the `docker run` command options, modify the `test`, `coverage`, or `serve` options in the `entry` script located in the top level **mfa-app** directory.
 
->**Note:** To learn more about Docker entry points, see [Dockerfile Best Practices](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/).
+>**Note:** To learn more about Docker entry points, see <a href="https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/" target="_blank"> Dockerfile Best Practices</a>.
 
 *	Run the following:
 
@@ -132,11 +132,11 @@ Generate and send the code. You can:
 	| Parameter: Argument | Required | Constraint |
 |-----------|----------|---------------------------------------------------------------|
 |`auth_id: Identifier`|Yes|The `my_identifier` is any user-defined string, limited to 120 characters. For example, this could be a UUID.
-|`recipient: my_phone number`|Yes|`my_phone_number` is the phone number identifying the recipient using an 11-digit, E.164 formatted *1NPANXXXXXXXXX* number. Validation is performed to ensure the phone number meets the formatting requirement, but no validation is performed to determine whether or not the phone number itself is valid. |
+|`recipient: my_phone number`|Yes|`my_phone_number` is an 11-digit, E.164 formatted *1NPANXXXXXXXXX*  phone number identifying the recipient. Validation is performed to ensure the phone number meets the formatting requirement, but no validation is performed to determine whether or not the phone number itself is valid. |
 
 	>**Important:** When using **POST** method with JSON you must also include the complete `Content-Type:application/json" localhost:8000` header.
 
-* use the client class stored in **client.py** 
+* use the client class stored in **client.py**: 
 
 		from client import SMSAuthClient 
 		my_client = SMSAuthClient(endpoint="localhost:8000")
