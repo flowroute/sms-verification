@@ -23,7 +23,7 @@ The following lines must be added to **credentials.py**:
 If you do not know your Flowroute information:
 
 * Your Access Key and Secret Key can be found on the <a href="https://manage.flowroute.com/accounts/preferences/api/" target="_blank">API Control </a> page on the Flowroute portal.
-* Your Flowroute phone numbers can be found on the <a href="https://manage.flowroute.com/accounts/dids/" target="_blank">DIDS</a> page on the Flowroute portal.
+* Your Flowroute phone numbers can be found on the <a href="https://manage.flowroute.com/accounts/dids/" target="_blank">DIDs</a> page on the Flowroute portal.
 
 ## Installing SMS Identity Authorization
 
@@ -130,8 +130,8 @@ Generate and send the code. You can:
 		curl -v -X POST -d '{"auth_id": "my_identifier", "recipient": "my_phone_number"}' -H
 		 "Content-Type: application/json" localhost:8000
 
-| Parameter: Argument | Required | Constraint |
-|-----------|----------|---------------------------------------------------------------|
+	| Key: Argument | Required | Constraint |
+	|-----------|----------|---------------------------------------------------------------|
 |`auth_id: Identifier`|Yes|The `my_identifier` is any user-defined string, limited to 120 characters. For example, this could be a UUID.
 |`recipient: my_phone number`|Yes|`my_phone_number` is the phone number identifying the recipient using an 11-digit, number formatted as *1XXXXXXXXXX*. Validation is performed to ensure the phone number meets the formatting requirement, but no validation is performed to determine whether or not the phone number itself is valid. |
 
@@ -155,10 +155,8 @@ Generate and send the code. You can:
 
 	* 	`1234` is the value passed through from user input.
 
->**Important!** URL encoding is required for the **GET** request.
-		
 	>**Important!** URL encoding is required for the **GET** request.
-		
+				
 The following then occurs:
 
 1.	The `auth_id` is validated. If the authorization ID is not recognized, a **400** status code is returned.
