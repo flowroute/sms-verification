@@ -1,6 +1,6 @@
 # SMS Identity Authorization
 
-SMS Identity Authorization is a microservice that allows you to an extra layer of security to your application; with this service you can a custom authorization code, and then send that code by SMS to a specified recipient. The recipient must then respond with that code to be authorized with access to the application. For example, the recipient might need to respond with the code on a web page to access that site. You can also customize the code length, allotted time to respond, and the number of permitted retries before disallowing access. 
+SMS Identity Authorization is a microservice that allows you to add an extra layer of security to your application; with this service you can a custom authorization code, and then send that code by SMS to a specified recipient. The recipient must then respond with that code to be authorized with access to the application. For example, the recipient might need to respond with the code on a web page to access that site. You can also customize the code length, allotted time to respond, and the number of permitted retries before disallowing access. 
 
 The service uses a SQLite backend and exposes an API endpoint which generates and validates verification requests using two methods: **POST** and **GET**.
 
