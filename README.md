@@ -62,10 +62,11 @@ Deploying the service can be done either by building and running a Docker contai
 
 	The service is set up at the root level.
 
->**Note:** See the <a href="http://flask.pocoo.org/" target="_blank">Flash</a> documentation for more information about the web framework.
+>**Note:** See the <a href="http://flask.pocoo.org/" target="_blank">Flask</a> documentation for more information about the web framework.
+
 
 ## Configure application settings
-Authorization settings can be configured using one of two methods: update the **settings.py** file or use **client.py**.
+Authorization settings can be configured using one of two methods: customize and run **settings.py** or run **client.py**.
 
 ### settings.py
 **settings.py** allows you to customize the authorization parameters, including authorization code length, expiration, number of retries, company name, and message. 
@@ -129,7 +130,7 @@ Generate and send the code. You can:
 		curl -v -X POST -d '{"auth_id": "my_identifier", "recipient": "my_phone_number"}' -H
 		 "Content-Type: application/json" localhost:8000
 
-	| Parameter: Argument | Required | Constraint |
+| Parameter: Argument | Required | Constraint |
 |-----------|----------|---------------------------------------------------------------|
 |`auth_id: Identifier`|Yes|The `my_identifier` is any user-defined string, limited to 120 characters. For example, this could be a UUID.
 |`recipient: my_phone number`|Yes|`my_phone_number` is the phone number identifying the recipient using an 11-digit, number formatted as *1XXXXXXXXXX*. Validation is performed to ensure the phone number meets the formatting requirement, but no validation is performed to determine whether or not the phone number itself is valid. |
