@@ -5,6 +5,7 @@ setup(name='sms_auth_service',
       description='An SMS backed authorization micro-service',
       packages=['sms_auth_service'],
       author='Flowroute Developers',
-      url='https://github.com/flowroute/two_factor_auth_python_demo',
+      license='MIT',
+      url='https://github.com/flowroute/sms-verification',
       author_email='developer@flowroute.com',
       )
