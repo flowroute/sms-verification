@@ -197,10 +197,3 @@ The following describe the possible error status codes:
 *  a **400** status code for invalid attempts, if the code has expired, or if the `auth_id` is not recognized. The number of retry attempts remaining is stored in the response data, along with the reason for the failure and the exception type.
 *  a **500** status code for an internal error, or if a phone number is not reachable on the network.
 
-
-## Contributing
-1. Fork it!
-2. Create your feature branch: `git checkout -b my-new-feature`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin my-new-feature`
-5. Submit a pull request :D
