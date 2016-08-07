@@ -15,8 +15,8 @@ from sms_auth_service.settings import (
     DEBUG_MODE, CODE_LENGTH, CODE_EXPIRATION,
     TEST_DB, DB, RETRIES_ALLOWED, AUTH_MESSAGE)
 
-from credentials import (FLOWROUTE_ACCESS_KEY, FLOWROUTE_SECRET_KEY,
-                         FLOWROUTE_NUMBER)
+from settings import (FLOWROUTE_ACCESS_KEY, FLOWROUTE_SECRET_KEY,
+                      FLOWROUTE_NUMBER)
 from sms_auth_service.log import log
 
 
