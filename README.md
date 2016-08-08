@@ -165,7 +165,7 @@ A code is auto-generated based on the modifications made to **settings.py** and 
 
 * Run the following:
 
-		url -X GET "http://localhost:8000?auth_id=my_identifier&code=1234"
+		curl -X GET "http://localhost:8000?auth_id=my_identifier&code=1234"
 
 	In this example,
 	*	`my_identifier` is the `auth_id` from the **POST** request.
