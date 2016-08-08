@@ -26,13 +26,13 @@ You will need your Access Key, Secret Key, and your SMS-enabled Flowroute number
 
 	The `git clone` command clones the **sms-verification** repository as a sub directory within the parent folder.
 
-4.	 Add the required environment variables to your host, or modify the settings.py file to include them.
+4.	 Add the required environment variables to your host, or modify **settings.py** to include them.
 
-	* Using a text editor — for example, **Sublime Text** — add the following lines to a new file, replacing the Access Key, Secret Key, and your Flowroute phone number with the information from your Flowroute account.
+	Using a text editor — for example, **Sublime Text** — add the following lines to a new file, replacing the Access Key, Secret Key, and Flowroute phone number with the information from your Flowroute account:
 
-			FLOWROUTE_ACCESS_KEY = "Your Access Key"
-			FLOWROUTE_SECRET_KEY = "Your Secret Key"
-			FLOWROUTE_NUMBER = "Your 11-digit, 1XXXXXXXXXX-formatted Flowroute phone number."
+		FLOWROUTE_ACCESS_KEY = "Your Access Key"
+		FLOWROUTE_SECRET_KEY = "Your Secret Key"
+		FLOWROUTE_NUMBER = "Your 11-digit, 1XXXXXXXXXX-formatted Flowroute phone number."
 
 7.	Deploy the service.
 
