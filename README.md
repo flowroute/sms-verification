@@ -116,7 +116,7 @@ With the service now deployed, configure authorization settings by either custom
 
 ### client.py
 
-The SMSAuthClient can be imported from **client.py** and instantiated with the `SMS_AUTH_ENDPOINT` as it's only argument. The SMSAuthClient has two methods, `create_auth` and `authenticate_code`, which proxy to the service resource endpoints.  
+The SMSAuthClient can be imported from **client.py** and instantiated with the `SMS_AUTH_ENDPOINT` as its only argument. The SMSAuthClient has two methods, `create_auth` and `authenticate_code`, which proxy to the service resource endpoints.  
 
 **client.py** reads the response and returns a success or error message as needed.
 
@@ -148,7 +148,7 @@ Generate and send the code. You can:
 
 	| Key: Argument | Required | Constraint |
 	|-----------|----------|---------------------------------------------------------------|
-|`auth_id: Identifier`|Yes|The `my_identifier` is any user-defined string, limited to 120 characters. For example, this could be a UUID.
+|`auth_id: Identifier`|Yes|`my_identifier` is any user-defined string, limited to 120 characters. For example, this could be a UUID.
 |`recipient: my_phone number`|Yes|`my_phone_number` is the phone number identifying the recipient using an 11-digit, number formatted as *1XXXXXXXXXX*. Validation is performed to ensure the phone number meets the formatting requirement, but no validation is performed to determine whether or not the phone number itself is valid. |
 
 	>**Important:** When using the **POST** method with JSON you must also include the complete `Content-Type:application/json" localhost:8000` header.
@@ -197,10 +197,3 @@ The following describe the possible error status codes:
 *  a **400** status code for invalid attempts, if the code has expired, or if the `auth_id` is not recognized. The number of retry attempts remaining is stored in the response data, along with the reason for the failure and the exception type.
 *  a **500** status code for an internal error, or if a phone number is not reachable on the network.
 
-
-## Contributing
-1. Fork it!
-2. Create your feature branch: `git checkout -b my-new-feature`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin my-new-feature`
-5. Submit a pull request :D
