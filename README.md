@@ -16,7 +16,7 @@ You will need your Access Key, Secret Key, and your SMS-enabled Flowroute number
 * Your Flowroute phone numbers can be found on the <a href="https://manage.flowroute.com/accounts/dids/" target="_blank">DIDs</a> page on the Flowroute portal.
 
 
-##Run `git clone` and create a credentials.py file
+##Run `git clone` 
 
 1.	If needed, create a parent directory where you want to deploy SMS Identify Authorization.
 
@@ -26,16 +26,13 @@ You will need your Access Key, Secret Key, and your SMS-enabled Flowroute number
 
 	The `git clone` command clones the **sms-verification** repository as a sub directory within the parent folder.
 
-4.	Create a **credentials.py** file that includes your Flowroute credentials. 
-	This is done to help protect against committing private information to a remote repository. 
+4.	 Add the required environment variables to your host, or modify the settings.py file to include them.
 
-	* Using a code text editor — for example, **Sublime Text** — add the following lines to a new file, replacing the Access Key, Secret Key, and your Flowroute phone number with the information from your Flowroute account.
+	* Using a text editor — for example, **Sublime Text** — add the following lines to a new file, replacing the Access Key, Secret Key, and your Flowroute phone number with the information from your Flowroute account.
 
 			FLOWROUTE_ACCESS_KEY = "Your Access Key"
 			FLOWROUTE_SECRET_KEY = "Your Secret Key"
 			FLOWROUTE_NUMBER = "Your 11-digit, 1XXXXXXXXXX-formatted Flowroute phone number."
-
-	*	Save the file as **credentials.py** in the **sms\_auth_service directory**.
 
 7.	Deploy the service.
 
